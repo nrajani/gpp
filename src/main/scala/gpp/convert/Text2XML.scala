@@ -4,7 +4,6 @@ import scala.xml._
 
 object Text2XML {
 
-  //def toXml(lst:List[String]) = <item label={ lst(0) } tweetid={ lst(1) }><content>{ lst(5) }</content></item>;
   def main(args: Array[String]) {
 
   	val input = io.Source.fromFile(args(0)).getLines.map(x => x.split(";;").toList)

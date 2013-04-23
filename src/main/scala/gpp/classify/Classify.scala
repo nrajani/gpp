@@ -19,7 +19,6 @@ object Classify {
 
   val logLevel = if (opts.verbose()) Level.DEBUG else Level.INFO
     Logger.getRootLogger.setLevel(logLevel)
-  //val contentRE = """^<content>(.*)<\content>$""".r
   if(opts.method() == "majority")
   Classification.maxClass(opts.trainfile(),opts.evalfile(),opts.detail())
 

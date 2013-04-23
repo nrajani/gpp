@@ -26,7 +26,6 @@ object MakeTweet
 }
 
 val combinedList = (tweetList,sentiList,targetList).zipped.toList
-//println(combinedList)
 val filteredList = combinedList.filter(x => x._2=="positive" || x._2=="negative" || x._2=="neutral")
 val (xtweetList,xsentiList, xtargetList) = filteredList.unzip3
 return (xsentiList, xtargetList, xtweetList)
