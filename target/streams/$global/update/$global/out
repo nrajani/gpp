@@ -795,7 +795,7 @@
 [0m[[0mdebug[0m] [0m	[NOT REQUIRED] org.scala-lang#scala-reflect;2.10.0!scala-reflect.jar[0m
 [0m[[0mdebug[0m] [0m	[NOT REQUIRED] org.clapper#grizzled-scala_2.9.1;1.0.12!grizzled-scala_2.9.1.jar[0m
 [0m[[0mdebug[0m] [0m	[NOT REQUIRED] jline#jline;2.6!jline.jar[0m
-[0m[[0mdebug[0m] [0m:: resolution report :: resolve 2079ms :: artifacts dl 29ms[0m
+[0m[[0mdebug[0m] [0m:: resolution report :: resolve 2153ms :: artifacts dl 35ms[0m
 [0m[[0mdebug[0m] [0m	report for edu.utexas#gpp;0.1 compile produced in /home/nazneen/gpp/target/resolution-cache/reports/edu.utexas-gpp-compile.xml[0m
 [0m[[0mdebug[0m] [0m	report for edu.utexas#gpp;0.1 runtime produced in /home/nazneen/gpp/target/resolution-cache/reports/edu.utexas-gpp-runtime.xml[0m
 [0m[[0mdebug[0m] [0m	report for edu.utexas#gpp;0.1 test produced in /home/nazneen/gpp/target/resolution-cache/reports/edu.utexas-gpp-test.xml[0m
@@ -808,5 +808,5 @@
 [0m[[0mdebug[0m] [0m	report for edu.utexas#gpp;0.1 sources produced in /home/nazneen/gpp/target/resolution-cache/reports/edu.utexas-gpp-sources.xml[0m
 [0m[[0mdebug[0m] [0m	report for edu.utexas#gpp;0.1 docs produced in /home/nazneen/gpp/target/resolution-cache/reports/edu.utexas-gpp-docs.xml[0m
 [0m[[0mdebug[0m] [0m	report for edu.utexas#gpp;0.1 pom produced in /home/nazneen/gpp/target/resolution-cache/reports/edu.utexas-gpp-pom.xml[0m
-[0m[[0mdebug[0m] [0m	resolve done (2079ms resolve - 29ms download)[0m
+[0m[[0mdebug[0m] [0m	resolve done (2153ms resolve - 35ms download)[0m
 [0m[[0minfo[0m] [0mDone updating.[0m

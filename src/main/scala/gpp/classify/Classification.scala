@@ -120,6 +120,7 @@ object Classification {
         yield (word, score.toDouble)
     val sentiMap = tempMap.map(k => (k._1 -> k._2)).toMap
     lazy val stemmer = new PorterStemmer
+    //def apply(tweet: String): List[Token] = asScalaBuffer(tagger.tokenizeAndTag(tweet)).toList.map(token => Token(token.token, token.tag))
     val suffix = List("ative","esque","tion","sion","ship","ness","ment","less","ious","ical","ible","ence","ance","able","est","ous","ing","ize","ive","ity","ist","ism","ish","ise","ify","ful","dom","ate","acy","ty","or","ic","fy","ed","es","er","en","al","al","s","y")
     //println(tokenized)
     print("Training... ")
@@ -128,13 +129,15 @@ object Classification {
      yield{
       Example(k._1,k._2.toLowerCase)
      }
+    val tMap = tweets.zip(target).toMap
+    val targetMap = tMap.map(k => (k._1.toLowerCase,k._2))
     val config = LiblinearConfig(cost=costValue)
     val featurizer = new Featurizer[String,String] {
       def apply(input: String) = {
-        //println(input)
+        //println(targetMap.get(input))
         val start = """([\?!\";\|\[\].,'#+-%])"""
         val wordRE = """(\\w)\\2+""".r
-        val starRE = """[*]*([a-zA-Z]+)[*]*""".r
+        val starRE = """[*]+([a-zA-Z]+)[*]+""".r
         val clean_input = input.replaceAll("""([\?!\";\|\[\].,'])""", " $1 ").trim.split("\\s+").filterNot(stopwords).filterNot(x => x.startsWith("#") || x.startsWith(start)
         ).toList
         //val attributes = clean_input.split("\\s+").toList 
@@ -147,9 +150,20 @@ object Classification {
         val tokenScore = clean_input.map(y => (y,sentiMap.getOrElse(y,0.0)))
         val sentScore = tokenScore.filter(x => (x._2 > 0.1) || (x._2 < -0.1))
         val polarityMap = sentScore.map(x => if(x._2 > 0.1)("_polarity","POSITIVE") else("_polarity","NEGATIVE")) 
-        val emoticonMap = clean_input.filter(x => x==":)" || x==":(" || x==":-(" || x==": ("|| x==":-)" || x==": )" || x==":D" || x=="=)").map(y => if(y==":)" || y==":-)" || y==": )" || y==":D" || y=="=)")("_Emo","POSITIVE") else("_Emo","NEGATIVE"))   
+        val emoticonMap = clean_input.filter(x => x==":)" || x==":(" || x==":-(" || x==": ("|| x==":-)" || x==": )" || x==":D" || x=="=)").map(y => if(y==":)" || y==":-)" || y==": )" || y==":D" || y=="=)")("_Emo","Happy") else("_Emo","Sad"))   
         val stemMap= clean_input.filter(y => stemmer(y)!=y).map(x => ("_stem",stemmer(x)))
-        val bigramMap = clean_input.filterNot(z => (stopwords.contains(z))).sliding(2).map(bg => ("_bigram",bg.mkString(" "))).toMap
+        val trigramMap = clean_input.filterNot(z => (stopwords.contains(z))).sliding(3).map(bg => ("_trigram",bg.mkString(" "))).toMap
+        val posTag = POSTagger(input)
+        val posMap = posTag.map(x => ("_pos",x.tag))
+        val targetfeature = targetMap.get(input) match {
+          case Some(tar) => Map("_target"->tar)
+          case None => Map("_target"->"unknown")  
+        }
+        //val tarMap = Map("target"->targetMap.get(input))
+        //println(targetfeature)
+        //targetfeature.filter(x => x._1=="_target")
+        //PosTag.foreach(x => println(x.token+"->"+x.tag))
+        //.map(token => Token(token.token, token.tag))
         //println(bigramMap)
         var suffixMap=Map[String,String]()
         for(x <- clean_input){
@@ -160,7 +174,10 @@ object Classification {
         }
         //val suffixMap = 
        // clean_input.filter(x => x.endsWith(suffix)).map(x => )
-        val featureMap = stemMap ++ polarityMap ++ emoticonMap ++wordMap 
+        val featureMap = stemMap ++ polarityMap ++ emoticonMap ++ wordMap ++ posMap 
+        //++ targetfeature
+        //++ trigramMap
+        //++ bigramMap ++ suffixMap
         //++ suffixMap
         //++ suffixMap
         //++ bigramMap
@@ -196,6 +213,18 @@ object Classification {
       println(confuse.detailedOutput) 
     
     }
+}
+
+case class Token(token: String, tag: String)
+object POSTagger {
+  import cmu.arktweetnlp.Tagger
+  import cmu.arktweetnlp.Tagger._
+  import scala.collection.JavaConversions._
+
+  lazy val tagger = new Tagger()
+  tagger.loadModel("/cmu/arktweetnlp/model.20120919")
+  
+  def apply(tweet: String): List[Token] = asScalaBuffer(tagger.tokenizeAndTag(tweet)).toList.map(token => Token(token.token, token.tag))
 }
 
 
