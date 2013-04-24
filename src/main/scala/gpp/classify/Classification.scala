@@ -22,8 +22,10 @@ object Classification {
     println("################################################################################")
     println("Evaluating  "+efile.mkString)
     val confidenceMap = predSenti.map(x => (x,0.1))
+    val confidenceScore = confidenceMap.foldLeft(0.0)(_+_._2)
     val confuse = ConfusionMatrix(elabel.toSeq, predSenti.toSeq, etweets.toSeq)
     println(confuse)
+    println("Average Confidence Score is ~ "+confidenceScore/confidenceMap.size)
     if(d)
     println(confuse.detailedOutput)
     }
@@ -62,10 +64,12 @@ object Classification {
       else
       ("neutral",0.3)
     }
+    val confidenceScore = confidenceMap.foldLeft(0.0)(_+_._2)
     println("################################################################################")
     println("Evaluating  "+efile.mkString)
     val confuse = ConfusionMatrix(elabel.toSeq, predLabel.toSeq, etweets.toSeq)
     println(confuse)
+    println("Average Confidence Score is ~ "+confidenceScore/confidenceMap.size)
     if(d)
     println(confuse.detailedOutput)
     }
@@ -74,7 +78,8 @@ object Classification {
 
     val (label,target,tweets) = MakeTweet(file)
     val (elabel,etarget,etweets) = MakeTweet(efile)
-    val tokenized = etweets.map(x => Twokenize.tokenize(x))
+    val tokenized = etweets.flatMap(x => Twokenize.tokenize(x))
+    val countMap = tokenized.groupBy(x=>x).mapValues(x=>x.length)
     val stopwords = io.Source.fromFile("data/stopwords.english").getLines.toSet
 
     print("Training... ")
@@ -88,8 +93,9 @@ object Classification {
       def apply(input: String) = {
         val tokenMap = Twokenize.tokenize(input)
         val wordMap = tokenMap.filterNot(stopwords).filterNot(x => x.startsWith("#"))
-       for (k <- wordMap)
-          yield FeatureObservation("word"+"="+k)
+        val wordCount = wordMap.map(x => (x,countMap.get(x)))
+       for (k <- wordCount)
+          yield FeatureObservation(k._1+"="+k._2)
       }
     }
     val classifier = NakContext.trainClassifier(config, featurizer, trainingExample)
@@ -102,8 +108,10 @@ object Classification {
       (ex._1, maxLabeltweets(classifier.evalRaw(ex._2)), ex._2)
     val (goldLabels, predictions, inputs) = comparisons.unzip3
     val confidenceMap = predictions.map(x => (x,0.7))
+    val confidenceScore = confidenceMap.foldLeft(0.0)(_+_._2)
     val confuse = ConfusionMatrix(goldLabels, predictions, inputs)
     println(confuse)
+    println("Average Confidence Score is ~ "+confidenceScore/confidenceMap.size)
     if(d)
       println(confuse.detailedOutput)    
     }
@@ -115,6 +123,7 @@ object Classification {
     val (label,target,tweets) = MakeTweet(file)
     val (elabel,etarget,etweets) = MakeTweet(efile)
     val tokenized = etweets.map(x => Twokenize.tokenize(x).mkString(" "))
+    val countMap = tokenized.groupBy(x=>x).mapValues(x=>x.length)
     val stopwords = io.Source.fromFile("data/stopwords.english").getLines.toSet
     val sentiRE = """^(.*)\s+([-]?\d+.\d+)$""".r
     val tempMap = for (sentiRE(word,score) <- io.Source.fromFile("data/sentiword.txt").getLines)
@@ -144,6 +153,9 @@ object Classification {
           case _ =>  ("word",x)
         }
         )
+        val tokenMap = Twokenize.tokenize(input)
+        val tempoMap = tokenMap.filterNot(stopwords).filterNot(x => x.startsWith("#"))
+        val wordCount = tempoMap.map(x => (x,countMap.get(x)))
         val tokenScore = clean_input.map(y => (y,sentiMap.getOrElse(y,0.0)))
         val sentScore = tokenScore.filter(x => (x._2 > 0.1) || (x._2 < -0.1))
         val polarityMap = sentScore.map(x => if(x._2 > 0.1)("_polarity","POSITIVE") else("_polarity","NEGATIVE")) 
@@ -151,6 +163,7 @@ object Classification {
         val stemMap= clean_input.filter(y => stemmer(y)!=y).map(x => ("_stem",stemmer(x)))
         val trigramMap = clean_input.filterNot(z => (stopwords.contains(z))).sliding(3).map(bg => ("_trigram",bg.mkString(" "))).toMap
         val posTag = POSTagger(input)
+        //println(posTag)
         val posMap = posTag.map(x => ("_pos",x.tag))
         val targetfeature = targetMap.get(input) match {
           case Some(tar) => Map("_target"->tar)
@@ -166,6 +179,7 @@ object Classification {
         //val suffixMap = 
        // clean_input.filter(x => x.endsWith(suffix)).map(x => )
         val featureMap = stemMap ++ polarityMap ++ emoticonMap ++ wordMap ++ posMap 
+        //++ wordCount
 
         for (k <- featureMap)
           yield FeatureObservation(k._1+"="+k._2)
@@ -181,8 +195,11 @@ object Classification {
     val comparisons = for (ex <- testExample) yield 
       (ex._1, maxLabeltweets(classifier.evalRaw(ex._2.toLowerCase)), ex._2.toLowerCase)
     val (goldLabels, predictions, inputs) = comparisons.unzip3
+    val confidenceMap = predictions.map(x => (x,0.8))
+    val confidenceScore = confidenceMap.foldLeft(0.0)(_+_._2)
     val confuse = ConfusionMatrix(goldLabels, predictions, inputs)
     println(confuse)
+    println("Average Confidence Score is ~ "+confidenceScore/confidenceMap.size)
     if(d)
       println(confuse.detailedOutput) 
     
